@@ -1,0 +1,78 @@
+{
+    "name": "laveroadmin/queue-manager",
+    "title": {
+        "en": "Queue Manager",
+        "ru": "Менеджер очередей"
+    },
+    "description": {
+        "en": "Monitor queues, retry or delete failed jobs, and inspect batches in real time.",
+        "ru": "Мониторинг очередей, перезапуск и удаление упавших задач, отслеживание батчей в реальном времени."
+    },
+    "category": "system",
+    "icon": "icon-tasks",
+    "version": "1.0.0",
+    "author": {
+        "name": "Aleksandr Kireev",
+        "email": "hello@bespredel.name",
+        "url": "https://bespredel.name"
+    },
+    "github": "https://github.com/LaveroAdmin/queue-manager",
+    "setup": {
+        "commands": [
+            {
+                "cmd": "php artisan queue:failed-table && php artisan queue:batches-table",
+                "desc": {
+                    "en": "Generate migrations for failed_jobs and job_batches tables",
+                    "ru": "Создание миграций для таблиц failed_jobs и job_batches"
+                }
+            },
+            {
+                "cmd": "php artisan migrate",
+                "desc": {
+                    "en": "Run database migrations",
+                    "ru": "Выполнение миграций базы данных"
+                }
+            },
+            {
+                "cmd": "php artisan admin:import queue-manager",
+                "desc": {
+                    "en": "Import admin menu item and permissions",
+                    "ru": "Импорт пункта меню и прав доступа"
+                }
+            }
+        ],
+        "config": {
+            "file": "config/admin.php",
+            "code": "'queue-manager' => [\n    'enable' => true,\n],"
+        },
+        "requirements": {
+            "en": [
+                "PHP >= 8.1",
+                "Configured queue driver (QUEUE_CONNECTION=database or redis in .env)"
+            ],
+            "ru": [
+                "PHP >= 8.1",
+                "Настроенный драйвер очередей (QUEUE_CONNECTION=database или redis в .env)"
+            ]
+        },
+        "notes": {
+            "en": [
+                "Start a queue worker: php artisan queue:work.",
+                "The 'Restart workers' button executes php artisan queue:restart."
+            ],
+            "ru": [
+                "Запустите воркер очередей: php artisan queue:work.",
+                "Кнопка 'Перезапустить воркеры' выполняет php artisan queue:restart."
+            ]
+        }
+    },
+    "key": "queue-manager",
+    "compatibility": {
+        "php": ">=8.1",
+        "laravel": "^10.0 || ^11.0 || ^12.0 || ^13.0",
+        "admin": "^1.0",
+        "extensions": [
+            "pdo"
+        ]
+    }
+}
