@@ -497,7 +497,7 @@
         btnRetrySel.addEventListener('click', function () {
             const ids = getSelectedIds();
             if (!ids.length) return;
-            admin.ajax.post('{{ route("queue-manager-bulk-retry") }}', { ids: ids }, function (res) {
+            admin.ajax.post('{{ route("queue-manager-retry-selected") }}', { ids: ids }, function (res) {
                 if (res && res.data && res.data.status) {
                     admin.toastr.success(res.data.message);
                     setTimeout(() => admin.ajax.reload(), 600);
@@ -509,7 +509,7 @@
         btnForgetSel.addEventListener('click', function () {
             const ids = getSelectedIds();
             if (!ids.length) return;
-            admin.ajax.post('{{ route("queue-manager-bulk-forget") }}', { ids: ids }, function (res) {
+            admin.ajax.post('{{ route("queue-manager-forget-selected") }}', { ids: ids }, function (res) {
                 if (res && res.data && res.data.status) {
                     admin.toastr.success(res.data.message);
                     setTimeout(() => admin.ajax.reload(), 600);
