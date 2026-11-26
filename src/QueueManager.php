@@ -31,8 +31,10 @@ class QueueManager extends Extension
             $router->get('queue-manager', 'LaveroAdmin\Admin\QueueManager\QueueController@index')->name('queue-manager-index');
             $router->get('queue-manager/job-detail', 'LaveroAdmin\Admin\QueueManager\QueueController@detail')->name('queue-manager-detail');
             $router->post('queue-manager/retry', 'LaveroAdmin\Admin\QueueManager\QueueController@retry')->name('queue-manager-retry');
+            $router->post('queue-manager/retry-selected', 'LaveroAdmin\Admin\QueueManager\QueueController@retrySelected')->name('queue-manager-retry-selected');
             $router->post('queue-manager/retry-all', 'LaveroAdmin\Admin\QueueManager\QueueController@retryAll')->name('queue-manager-retry-all');
             $router->delete('queue-manager/forget', 'LaveroAdmin\Admin\QueueManager\QueueController@forget')->name('queue-manager-forget');
+            $router->post('queue-manager/forget-selected', 'LaveroAdmin\Admin\QueueManager\QueueController@forgetSelected')->name('queue-manager-forget-selected');
             $router->post('queue-manager/flush', 'LaveroAdmin\Admin\QueueManager\QueueController@flush')->name('queue-manager-flush');
             $router->post('queue-manager/restart', 'LaveroAdmin\Admin\QueueManager\QueueController@restart')->name('queue-manager-restart');
         });

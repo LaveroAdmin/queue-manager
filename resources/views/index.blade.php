@@ -113,6 +113,18 @@
 
         <div class="d-flex flex-wrap align-items-center gap-2">
             @if($stats['failed'] > 0)
+                <select id="filter-failed-queue" class="form-select form-select-sm" style="width: auto;">
+                    <option value="">All queues</option>
+                    @foreach(array_unique(array_column($failedJobs, 'queue')) as $qName)
+                        <option value="{{ $qName }}">{{ $qName }}</option>
+                    @endforeach
+                </select>
+                <button type="button" class="btn btn-sm btn-outline-success d-none" id="btn-retry-selected">
+                    <i class="icon-redo me-1"></i> Retry Selected
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger d-none" id="btn-forget-selected">
+                    <i class="icon-trash me-1"></i> Delete Selected
+                </button>
                 <button type="button" class="btn btn-sm btn-success" id="btn-retry-all">
                     <i class="icon-redo me-1"></i> {{ trans('lavero-admin-queue-manager::queue.retry_all') }}
                 </button>
@@ -120,6 +132,10 @@
                     <i class="icon-trash me-1"></i> {{ trans('lavero-admin-queue-manager::queue.flush') }}
                 </button>
             @endif
+            <div class="form-check form-switch mb-0 ms-1">
+                <input class="form-check-input" type="checkbox" id="toggle-auto-refresh">
+                <label class="form-check-label small text-muted" for="toggle-auto-refresh">Auto (10s)</label>
+            </div>
             <button type="button" class="btn btn-sm btn-outline-warning" id="btn-restart-workers">
                 <i class="icon-sync-alt me-1"></i> {{ trans('lavero-admin-queue-manager::queue.restart_workers') }}
             </button>
@@ -143,6 +159,7 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
+                                    <th style="width: 36px;"><input type="checkbox" class="form-check-input" id="select-all-failed"></th>
                                     <th style="width: 50px;">#</th>
                                     <th>{{ trans('lavero-admin-queue-manager::queue.job_name') }}</th>
                                     <th style="width: 120px;">{{ trans('lavero-admin-queue-manager::queue.queue') }}</th>
@@ -153,7 +170,8 @@
                             </thead>
                             <tbody>
                                 @foreach($failedJobs as $job)
-                                <tr>
+                                <tr class="failed-job-row" data-queue="{{ $job['queue'] }}">
+                                    <td><input type="checkbox" class="form-check-input failed-job-check" value="{{ $job['id'] }}"></td>
                                     <td class="text-muted">{{ $job['id'] }}</td>
                                     <td>
                                         <div class="fw-semibold text-break font-monospace small">{{ $job['name'] }}</div>
@@ -440,6 +458,82 @@
                 }
             });
         });
+    }
+
+    // Queue filter
+    const queueFilter = document.getElementById('filter-failed-queue');
+    if (queueFilter) {
+        queueFilter.addEventListener('change', function () {
+            const val = this.value;
+            document.querySelectorAll('.failed-job-row').forEach(row => {
+                row.style.display = (!val || row.dataset.queue === val) ? '' : 'none';
+            });
+        });
+    }
+
+    // Bulk selection & actions
+    const selectAll = document.getElementById('select-all-failed');
+    const btnRetrySel = document.getElementById('btn-retry-selected');
+    const btnForgetSel = document.getElementById('btn-forget-selected');
+    function getSelectedIds() {
+        return Array.from(document.querySelectorAll('.failed-job-check:checked')).map(el => el.value);
+    }
+    function syncBulkButtons() {
+        const count = getSelectedIds().length;
+        if (btnRetrySel) btnRetrySel.classList.toggle('d-none', count === 0);
+        if (btnForgetSel) btnForgetSel.classList.toggle('d-none', count === 0);
+    }
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            document.querySelectorAll('.failed-job-check').forEach(cb => {
+                if (cb.closest('tr').style.display !== 'none') cb.checked = this.checked;
+            });
+            syncBulkButtons();
+        });
+    }
+    document.querySelectorAll('.failed-job-check').forEach(cb => cb.addEventListener('change', syncBulkButtons));
+
+    if (btnRetrySel) {
+        btnRetrySel.addEventListener('click', function () {
+            const ids = getSelectedIds();
+            if (!ids.length) return;
+            admin.ajax.post('{{ route("queue-manager-bulk-retry") }}', { ids: ids }, function (res) {
+                if (res && res.data && res.data.status) {
+                    admin.toastr.success(res.data.message);
+                    setTimeout(() => admin.ajax.reload(), 600);
+                }
+            });
+        });
+    }
+    if (btnForgetSel) {
+        btnForgetSel.addEventListener('click', function () {
+            const ids = getSelectedIds();
+            if (!ids.length) return;
+            admin.ajax.post('{{ route("queue-manager-bulk-forget") }}', { ids: ids }, function (res) {
+                if (res && res.data && res.data.status) {
+                    admin.toastr.success(res.data.message);
+                    setTimeout(() => admin.ajax.reload(), 600);
+                }
+            });
+        });
+    }
+
+    // Auto-refresh (10s)
+    const autoRefresh = document.getElementById('toggle-auto-refresh');
+    if (window._queueRefreshTimer) clearInterval(window._queueRefreshTimer);
+    if (autoRefresh) {
+        autoRefresh.checked = localStorage.getItem('lavero_queue_autorefresh') === '1';
+        const startTimer = () => {
+            if (window._queueRefreshTimer) clearInterval(window._queueRefreshTimer);
+            if (autoRefresh.checked) {
+                window._queueRefreshTimer = setInterval(() => admin.ajax.reload(), 10000);
+            }
+        };
+        autoRefresh.addEventListener('change', function () {
+            localStorage.setItem('lavero_queue_autorefresh', this.checked ? '1' : '0');
+            startTimer();
+        });
+        startTimer();
     }
 })();
 </script>

@@ -142,4 +142,42 @@ class QueueController
             ]);
         }
     }
+
+    public function retrySelected(Request $request): JsonResponse
+    {
+        $ids = array_values(array_filter((array) $request->input('ids', [])));
+        $count = 0;
+
+        foreach ($ids as $id) {
+            try {
+                $this->service->retryJob($id);
+                $count++;
+            } catch (\Throwable) {
+            }
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => "Retried {$count} job(s).",
+        ]);
+    }
+
+    public function forgetSelected(Request $request): JsonResponse
+    {
+        $ids = array_values(array_filter((array) $request->input('ids', [])));
+        $count = 0;
+
+        foreach ($ids as $id) {
+            try {
+                $this->service->forgetJob($id);
+                $count++;
+            } catch (\Throwable) {
+            }
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => "Deleted {$count} job(s).",
+        ]);
+    }
 }
